@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Generador de Tarjetas de Cumpleaños</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Montserrat:wght@400;500;600;700;800;900&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --gold: #d4a853;
+      --gold-light: #e8c36a;
+      --silver: #c0c0c0;
+      --navy: #0a1628;
+      --navy-light: #142440;
+      --navy-lighter: #1a3058;
+      --bg: #0d1b2e;
+      --card-bg: #111e33;
+      --border: #2a3a52;
+      --muted: #6b7a8d;
+      --white: #ffffff;
+    }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: var(--bg);
+      color: var(--white);
+      min-height: 100vh;
+    }
+
+    /* ===== HEADER ===== */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(17,30,51,0.9);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(42,58,82,0.5);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .header-icon {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: linear-gradient(135deg, #d4a853 0%, #f0d78c 50%, #c9982e 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; color: var(--navy);
+    }
+    .header-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; }
+    .header-subtitle { font-size: 11px; color: var(--gold); font-family: 'Open Sans', sans-serif; }
+    .btn-download {
+      background: linear-gradient(135deg, #d4a853 0%, #f0d78c 50%, #c9982e 100%);
+      color: var(--navy);
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex; align-items: center; gap: 8px;
+      transition: opacity 0.2s;
+    }
+    .btn-download:hover { opacity: 0.9; }
+
+    /* ===== MAIN LAYOUT ===== */
+    .main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 24px;
+    }
+    @media (max-width: 900px) {
+      .main { grid-template-columns: 1fr; }
+    }
+
+    /* ===== CARD PREVIEW ===== */
+    .card-preview {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    .card-container {
+      width: 100%;
+      max-width: 540px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+
+    /* Card background */
+    .card-bg {
+      background: linear-gradient(180deg, #0a1628 0%, #142440 40%, #1a3058 100%);
+      position: relative;
+      aspect-ratio: 3/4;
+      min-height: 750px;
+    }
+
+    /* Confetti */
+    .confetti-piece {
+      position: absolute;
+      opacity: 0.6;
+      border-radius: 1px;
+    }
+
+    /* Bunting */
+    .bunting-svg {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 50px;
+      overflow: hidden;
+      z-index: 2;
+    }
+
+    /* Card content */
+    .card-content {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 60px 32px 24px;
+      min-height: 100%;
+    }
+
+    .card-title { text-align: center; margin-bottom: 12px; }
+    .card-title-line1 {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 2.4rem;
+      color: white;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    }
+    .card-title-line2 {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 3.2rem;
+      line-height: 1.1;
+      background: linear-gradient(135deg, #d4a853 0%, #f0d78c 40%, #c9982e 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .card-title-line3 {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      font-size: 1rem;
+      color: white;
+      letter-spacing: 0.2em;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+      margin-top: 4px;
+    }
+
+    /* Age number + Photo section */
+    .age-photo-section {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 4px 0;
+      position: relative;
+      z-index: 10;
+    }
+    .age-number {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      font-size: 7rem;
+      line-height: 1;
+      color: rgba(184,188,192,0.5);
+      text-shadow: 0 2px 12px rgba(192,192,192,0.2), 0 0 30px rgba(192,192,192,0.1);
+      -webkit-text-stroke: 1px rgba(192,192,192,0.15);
+      margin-right: -15px;
+      user-select: none;
+    }
+    .card-photo-wrapper {
+      position: relative;
+      z-index: 10;
+    }
+    .card-photo {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 4px solid rgba(59,130,246,0.5);
+      box-shadow: 0 0 50px rgba(59,130,246,0.3), 0 0 70px rgba(59,130,246,0.15), inset 0 0 20px rgba(59,130,246,0.2);
+    }
+    .card-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .age-spacer {
+      width: 60px;
+    }
+
+    .card-congratulation {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 1.4rem;
+      color: #d4a853;
+      text-align: center;
+      margin-top: 16px;
+      text-shadow: 0 1px 6px rgba(212,168,83,0.25);
+    }
+
+    .card-message {
+      font-family: 'Open Sans', sans-serif;
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.75);
+      text-align: center;
+      margin-top: 12px;
+      line-height: 1.6;
+      padding: 0 28px;
+    }
+
+    .card-signature {
+      text-align: center;
+      margin-top: 16px;
+    }
+    .card-signature-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.6);
+    }
+    .card-signature-name {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      color: rgba(255,255,255,0.9);
+      margin-top: 4px;
+      letter-spacing: 0.05em;
+    }
+
+    /* Company logo */
+    .card-logo {
+      margin-top: 12px;
+      display: flex;
+      justify-content: center;
+    }
+    .card-logo img {
+      max-width: 130px;
+      max-height: 65px;
+      object-fit: contain;
+    }
+
+    /* Birthday cake */
+    .card-cake {
+      margin-top: 8px;
+      display: flex;
+      justify-content: center;
+    }
+    .card-cake img {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+    }
+
+    /* ===== EDITOR PANEL ===== */
+    .editor-panel {
+      background: rgba(17,30,51,0.7);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(42,58,82,0.5);
+      border-radius: 12px;
+      padding: 20px;
+      align-self: start;
+      position: sticky;
+      top: 80px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 20px;
+      background: rgba(10,22,40,0.4);
+      border-radius: 8px;
+      padding: 4px;
+    }
+    .tab {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 500;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: rgba(255,255,255,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .tab.active {
+      background: linear-gradient(135deg, #d4a853 0%, #f0d78c 50%, #c9982e 100%);
+      color: var(--navy);
+    }
+
+    .section-label {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(212,168,83,0.7);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+      margin-top: 4px;
+    }
+
+    .form-group { margin-bottom: 12px; }
+    .form-label {
+      display: block;
+      font-size: 12px;
+      color: rgba(255,255,255,0.6);
+      font-family: 'Montserrat', sans-serif;
+      margin-bottom: 6px;
+    }
+
+    input[type="text"], input[type="number"], textarea {
+      width: 100%;
+      padding: 10px 12px;
+      background: rgba(10,22,40,0.5);
+      border: 1px solid rgba(42,58,82,0.8);
+      border-radius: 6px;
+      color: white;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input[type="text"]:focus, input[type="number"]:focus, textarea:focus {
+      border-color: var(--gold);
+    }
+    textarea { resize: vertical; }
+
+    .photo-upload {
+      border: 2px dashed rgba(42,58,82,0.8);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .photo-upload:hover { border-color: rgba(212,168,83,0.5); }
+    .photo-upload img {
+      width: 100px; height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid rgba(212,168,83,0.3);
+    }
+    .photo-upload .upload-hint {
+      font-size: 11px;
+      color: rgba(255,255,255,0.4);
+      margin-top: 8px;
+      font-family: 'Montserrat', sans-serif;
+    }
+    .photo-upload .upload-overlay {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .photo-upload:hover .upload-overlay { opacity: 1; }
+    .photo-upload .upload-overlay span {
+      color: white;
+      font-size: 14px;
+    }
+
+    .separator {
+      height: 1px;
+      background: rgba(42,58,82,0.5);
+      margin: 16px 0;
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: rgba(17,30,51,0.95);
+      border: 1px solid rgba(212,168,83,0.3);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 13px;
+      z-index: 9999;
+      opacity: 0;
+      transition: all 0.3s ease-out;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .main {
+        grid-template-columns: 1fr;
+        padding: 16px;
+        gap: 16px;
+      }
+      .card-preview {
+        order: 1;
+      }
+      .card-container { max-width: 100%; }
+      .editor-panel {
+        position: static;
+        order: 2;
+        border-top: 3px solid rgba(212,168,83,0.4);
+      }
+      .tabs {
+        display: flex !important;
+        gap: 4px;
+        margin-bottom: 16px;
+        background: rgba(10,22,40,0.6);
+        border-radius: 8px;
+        padding: 4px;
+      }
+      .tab {
+        flex: 1;
+        padding: 12px;
+        border: none;
+        border-radius: 6px;
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: rgba(255,255,255,0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-height: 48px;
+      }
+      .tab.active {
+        background: linear-gradient(135deg, #d4a853 0%, #f0d78c 50%, #c9982e 100%);
+        color: var(--navy);
+      }
+      .age-number { font-size: 4.5rem; }
+      .card-photo { width: 150px; height: 150px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <div class="header-icon">&#10022;</div>
+      <div>
+        <div class="header-title">Generador de Tarjetas</div>
+        <div class="header-subtitle">Cumpleaños Corporativas</div>
+      </div>
+    </div>
+    <button class="btn-download" onclick="downloadCard()">
+      &#8595; Descargar
+    </button>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <!-- CARD PREVIEW -->
+    <div class="card-preview">
+      <div class="card-container" id="cardToExport">
+        <div class="card-bg" id="birthdayCard">
+
+          <!-- Confetti (generated by JS) -->
+          <div id="confettiContainer"></div>
+
+          <!-- Bunting -->
+          <div class="bunting-svg">
+            <svg viewBox="0 0 600 50" preserveAspectRatio="xMidYMid slice" style="width:100%;height:100%;">
+              <g id="buntingGroup"></g>
+            </svg>
+          </div>
+
+          <!-- ALL BALLOONS - SVG shapes, more than before -->
+          <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:5;" viewBox="0 0 540 750" preserveAspectRatio="xMidYMid slice">
+            <!-- Gold balloons - top right cluster (3 balloons) -->
+            <g transform="translate(440,55) rotate(12)">
+              <ellipse cx="0" cy="0" rx="28" ry="36" fill="url(#goldBalloon)"/>
+              <ellipse cx="-5" cy="-10" rx="8" ry="12" fill="rgba(255,255,255,0.3)"/>
+              <line x1="0" y1="36" x2="-10" y2="85" stroke="rgba(180,180,180,0.4)" stroke-width="1"/>
+            </g>
+            <g transform="translate(470,80) rotate(-8)" opacity="0.75">
+              <ellipse cx="0" cy="0" rx="24" ry="30" fill="url(#goldBalloon)"/>
+              <ellipse cx="-4" cy="-8" rx="7" ry="10" fill="rgba(255,255,255,0.25)"/>
+              <line x1="0" y1="30" x2="-8" y2="75" stroke="rgba(180,180,180,0.4)" stroke-width="1"/>
+            </g>
+            <g transform="translate(420,100) rotate(5)" opacity="0.6">
+              <ellipse cx="0" cy="0" rx="20" ry="26" fill="url(#goldBalloon)"/>
+              <ellipse cx="-3" cy="-6" rx="5" ry="8" fill="rgba(255,255,255,0.2)"/>
+              <line x1="0" y1="26" x2="-5" y2="62" stroke="rgba(180,180,180,0.3)" stroke-width="1"/>
+            </g>
+
+            <!-- Silver balloons - top left (2 balloons) -->
+            <g transform="translate(55,65) rotate(-10)" opacity="0.6">
+              <ellipse cx="0" cy="0" rx="22" ry="28" fill="url(#silverBalloon)"/>
+              <ellipse cx="-3" cy="-8" rx="6" ry="9" fill="rgba(255,255,255,0.25)"/>
+              <line x1="0" y1="28" x2="-6" y2="68" stroke="rgba(180,180,180,0.3)" stroke-width="1"/>
+            </g>
+            <g transform="translate(80,45) rotate(8)" opacity="0.5">
+              <ellipse cx="0" cy="0" rx="16" ry="20" fill="url(#silverBalloon)"/>
+              <ellipse cx="-3" cy="-5" rx="4" ry="7" fill="rgba(255,255,255,0.2)"/>
+              <line x1="0" y1="20" x2="-4" y2="52" stroke="rgba(180,180,180,0.3)" stroke-width="1"/>
+            </g>
+
+            <!-- Blue balloons - left side (3 balloons) -->
+            <g transform="translate(45,300) rotate(8)" opacity="0.55">
+              <ellipse cx="0" cy="0" rx="18" ry="22" fill="url(#blueBalloon)"/>
+              <ellipse cx="-3" cy="-6" rx="5" ry="7" fill="rgba(255,255,255,0.15)"/>
+              <line x1="0" y1="22" x2="-4" y2="55" stroke="rgba(180,180,180,0.3)" stroke-width="1"/>
+            </g>
+            <g transform="translate(35,630) rotate(5)" opacity="0.65">
+              <ellipse cx="0" cy="0" rx="22" ry="26" fill="url(#blueBalloon)"/>
+              <ellipse cx="-3" cy="-7" rx="6" ry="8" fill="rgba(255,255,255,0.2)"/>
+              <line x1="0" y1="26" x2="-5" y2="60" stroke="rgba(180,180,180,0.3)" stroke-width="1"/>
+            </g>
+            <g transform="translate(65,655) rotate(-5)" opacity="0.55">
+              <ellipse cx="0" cy="0" rx="16" ry="20" fill="url(#blueBalloon)"/>
+              <ellipse cx="-3" cy="-5" rx="4" ry="6" fill="rgba(255,255,255,0.2)"/>
+              <line x1="0" y1="20" x2="-4" y2="50" stroke="rgba(180,180,180,0.3)" stroke-width="1"/>
+            </g>
+
+            <!-- Bottom right balloons cluster (4 balloons) -->
+            <g transform="translate(470,620) rotate(-5)" opacity="0.7">
+              <ellipse cx="0" cy="0" rx="26" ry="32" fill="url(#goldBalloon)"/>
+              <ellipse cx="-4" cy="-9" rx="7" ry="10" fill="rgba(255,255,255,0.25)"/>
+              <line x1="0" y1="32" x2="-7" y2="70" stroke="rgba(180,180,180,0.3)" stroke-width="1"/>
+            </g>
+            <g transform="translate(495,650) rotate(8)" opacity="0.6">
+              <ellipse cx="0" cy="0" rx="20" ry="24" fill="url(#silverBalloon)"/>
+              <ellipse cx="-3" cy="-7" rx="5" ry="7" fill="rgba(255,255,255,0.2)"/>
+              <line x1="0" y1="24" x2="-5" y2="58" stroke="rgba(180,180,180,0.3)" stroke-width="1"/>
+            </g>
+            <g transform="translate(455,665) rotate(-12)" opacity="0.55">
+              <ellipse cx="0" cy="0" rx="15" ry="18" fill="url(#goldBalloon)"/>
+              <ellipse cx="-3" cy="-5" rx="4" ry="5" fill="rgba(255,255,255,0.2)"/>
+              <line x1="0" y1="18" x2="-4" y2="48" stroke="rgba(180,180,180,0.3)" stroke-width="1"/>
+            </g>
+            <g transform="translate(505,670) rotate(3)" opacity="0.5">
+              <ellipse cx="0" cy="0" rx="14" ry="16" fill="url(#blueBalloon)"/>
+              <ellipse cx="-3" cy="-4" rx="3" ry="5" fill="rgba(255,255,255,0.15)"/>
+              <line x1="0" y1="16" x2="-3" y2="42" stroke="rgba(180,180,180,0.3)" stroke-width="1"/>
+            </g>
+
+            <!-- Additional mid-right balloons -->
+            <g transform="translate(500,350) rotate(-10)" opacity="0.45">
+              <ellipse cx="0" cy="0" rx="14" ry="18" fill="url(#goldBalloon)"/>
+              <ellipse cx="-3" cy="-5" rx="4" ry="6" fill="rgba(255,255,255,0.2)"/>
+              <line x1="0" y1="18" x2="-3" y2="45" stroke="rgba(180,180,180,0.3)" stroke-width="1"/>
+            </g>
+            <g transform="translate(30,450) rotate(10)" opacity="0.4">
+              <ellipse cx="0" cy="0" rx="12" ry="15" fill="url(#silverBalloon)"/>
+              <ellipse cx="-3" cy="-4" rx="3" ry="5" fill="rgba(255,255,255,0.2)"/>
+              <line x1="0" y1="15" x2="-3" y2="40" stroke="rgba(180,180,180,0.3)" stroke-width="1"/>
+            </g>
+
+            <!-- Gradient definitions -->
+            <defs>
+              <radialGradient id="goldBalloon" cx="35%" cy="35%">
+                <stop offset="0%" stop-color="#f0d78c"/>
+                <stop offset="50%" stop-color="#d4a853"/>
+                <stop offset="100%" stop-color="#a07830"/>
+              </radialGradient>
+              <radialGradient id="silverBalloon" cx="35%" cy="35%">
+                <stop offset="0%" stop-color="#e0e4e8"/>
+                <stop offset="50%" stop-color="#b8bcc0"/>
+                <stop offset="100%" stop-color="#808080"/>
+              </radialGradient>
+              <radialGradient id="blueBalloon" cx="35%" cy="35%">
+                <stop offset="0%" stop-color="#60a5fa"/>
+                <stop offset="50%" stop-color="#3b82f6"/>
+                <stop offset="100%" stop-color="#1e40af"/>
+              </radialGradient>
+            </defs>
+          </svg>
+
+          <!-- Card Content -->
+          <div class="card-content">
+            <div class="card-title">
+              <div class="card-title-line1" id="cardTitle1">Happy</div>
+              <div class="card-title-line2" id="cardTitle2">Birthday</div>
+              <div class="card-title-line3" id="cardTitle3">&iexcl;Feliz Cumplea&ntilde;os!</div>
+            </div>
+
+            <!-- Age + Photo -->
+            <div class="age-photo-section">
+              <span class="age-number" id="cardAge">80</span>
+              <div class="card-photo-wrapper">
+                <div class="card-photo">
+                  <img id="cardPhoto" src="" alt="Foto del cumpleañero" />
+                </div>
+              </div>
+              <span class="age-spacer"></span>
+            </div>
+
+            <!-- Congratulation -->
+            <div class="card-congratulation" id="cardCongratulation">&iexcl;Felicitaciones en tu d&iacute;a, Asesor!</div>
+
+            <!-- Message -->
+            <div class="card-message" id="cardMessage">Que la alegr&iacute;a de hoy sea el inicio de un nuevo a&ntilde;o lleno de grandes logros, salud y prosperidad. Gracias por tu excelente labor y dedicaci&oacute;n a nuestra empresa.</div>
+
+            <!-- Signature -->
+            <div class="card-signature">
+              <div class="card-signature-title" id="cardSigTitle">Atentamente,</div>
+              <div class="card-signature-name" id="cardSigName">COORDINACI&Oacute;N DE CR&Eacute;DITOS SOLIDARIOS</div>
+            </div>
+
+            <!-- Company Logo (static: sol.png) -->
+            <div class="card-logo">
+              <img src="sol.png" alt="Logo de la empresa" />
+            </div>
+
+            <!-- Birthday Cake with candles -->
+            <div class="card-cake">
+              <img src="sol.png" alt="" style="display:none;" /> <!-- placeholder to hide cake for now -->
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- EDITOR PANEL -->
+    <div class="editor-panel">
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('photo', this)">&#128247; Foto</button>
+        <button class="tab" onclick="switchTab('text', this)">&#9998; Textos</button>
+      </div>
+
+      <!-- Photo Tab -->
+      <div class="tab-content active" id="tab-photo">
+        <div class="section-label">Foto del Cumplea&ntilde;ero</div>
+        <div class="photo-upload" onclick="document.getElementById('photoInput').click()" style="position:relative;">
+          <img id="editorPhotoPreview" src="" alt="Foto" />
+          <div class="upload-overlay"><span>&#8593; Cambiar</span></div>
+          <div class="upload-hint">Haz clic para cambiar la foto</div>
+        </div>
+        <input type="file" id="photoInput" accept="image/*" style="display:none;" onchange="handlePhotoUpload(event)" />
+
+        <div class="separator"></div>
+
+        <div class="section-label">Edad</div>
+        <div class="form-group">
+          <label class="form-label">N&uacute;mero de edad</label>
+          <input type="number" value="80" min="1" max="100" oninput="updateCard('cardAge', this.value)" />
+        </div>
+      </div>
+
+      <!-- Text Tab -->
+      <div class="tab-content" id="tab-text">
+        <div class="section-label">T&iacute;tulo Principal</div>
+        <div class="form-group">
+          <label class="form-label">L&iacute;nea 1</label>
+          <input type="text" value="Happy" oninput="updateCard('cardTitle1', this.value)" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">L&iacute;nea 2 (Dorado)</label>
+          <input type="text" value="Birthday" oninput="updateCard('cardTitle2', this.value)" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">L&iacute;nea 3</label>
+          <input type="text" value="¡Feliz Cumpleaños!" oninput="updateCard('cardTitle3', this.value)" />
+        </div>
+
+        <div class="separator"></div>
+
+        <div class="section-label">Felicitaci&oacute;n</div>
+        <div class="form-group">
+          <input type="text" value="¡Felicitaciones en tu día, Asesor!" oninput="updateCard('cardCongratulation', this.value)" />
+        </div>
+
+        <div class="separator"></div>
+
+        <div class="section-label">Mensaje Corporativo</div>
+        <div class="form-group">
+          <textarea rows="4" oninput="updateCard('cardMessage', this.value)">Que la alegría de hoy sea el inicio de un nuevo año lleno de grandes logros, salud y prosperidad. Gracias por tu excelente labor y dedicación a nuestra empresa.</textarea>
+        </div>
+
+        <div class="separator"></div>
+
+        <div class="section-label">Firma</div>
+        <div class="form-group">
+          <label class="form-label">T&iacute;tulo de firma</label>
+          <input type="text" value="Atentamente," oninput="updateCard('cardSigTitle', this.value)" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nombre / Departamento</label>
+          <input type="text" value="COORDINACIÓN DE CRÉDITOS SOLIDARIOS" oninput="updateCard('cardSigName', this.value)" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ===== INITIALIZATION =====
+    // Create a placeholder image for the photo
+    const placeholderCanvas = document.createElement('canvas');
+    placeholderCanvas.width = 200;
+    placeholderCanvas.height = 200;
+    const ctx = placeholderCanvas.getContext('2d');
+    ctx.fillStyle = '#142440';
+    ctx.fillRect(0, 0, 200, 200);
+    ctx.strokeStyle = 'rgba(59,130,246,0.5)';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(100, 100, 80, 0, Math.PI * 2);
+    ctx.stroke();
+    // Camera icon
+    ctx.fillStyle = 'rgba(100,130,180,0.6)';
+    ctx.fillRect(70, 80, 60, 45);
+    ctx.fillRect(80, 74, 40, 8);
+    ctx.fillStyle = 'rgba(59,130,246,0.7)';
+    ctx.beginPath();
+    ctx.arc(100, 102, 18, 0, Math.PI * 2);
+    ctx.fill();
+    // Text
+    ctx.fillStyle = 'rgba(200,200,210,0.5)';
+    ctx.font = '14px Montserrat, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Subir foto', 100, 160);
+    const placeholderDataUrl = placeholderCanvas.toDataURL('image/png');
+
+    // Set initial placeholder
+    document.getElementById('cardPhoto').src = placeholderDataUrl;
+    document.getElementById('editorPhotoPreview').src = placeholderDataUrl;
+
+    // ===== CONFETTI =====
+    function generateConfetti() {
+      const container = document.getElementById('confettiContainer');
+      const colors = ['#d4a853', '#c0c0c0', '#3b82f6', '#f0d78c', '#a8d8ea', '#ffd700'];
+      for (let i = 0; i < 50; i++) {
+        const piece = document.createElement('div');
+        piece.className = 'confetti-piece';
+        piece.style.left = Math.random() * 100 + '%';
+        piece.style.top = Math.random() * 100 + '%';
+        piece.style.width = (4 + Math.random() * 5) + 'px';
+        piece.style.height = (3 + Math.random() * 3) + 'px';
+        piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.transform = 'rotate(' + (Math.random() * 360) + 'deg)';
+        container.appendChild(piece);
+      }
+      // Shimmer dots
+      for (let i = 0; i < 15; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'confetti-piece';
+        dot.style.borderRadius = '50%';
+        dot.style.left = (5 + Math.random() * 90) + '%';
+        dot.style.top = (5 + Math.random() * 90) + '%';
+        dot.style.width = (2 + Math.random() * 3) + 'px';
+        dot.style.height = (2 + Math.random() * 3) + 'px';
+        dot.style.backgroundColor = '#ffffff';
+        dot.style.opacity = 0.15 + Math.random() * 0.2;
+        container.appendChild(dot);
+      }
+    }
+    generateConfetti();
+
+    // ===== BUNTING =====
+    function generateBunting() {
+      const g = document.getElementById('buntingGroup');
+      for (let i = 0; i < 14; i++) {
+        const x = 300 + (i - 6.5) * 40;
+        const curveY = Math.sin((i / 13) * Math.PI) * 12;
+        const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+        polygon.setAttribute('points', `${x-16},${curveY} ${x+16},${curveY} ${x},${28+curveY}`);
+        polygon.setAttribute('fill', i % 2 === 0 ? '#c8ccd0' : '#e0e4e8');
+        polygon.setAttribute('opacity', '0.6');
+        g.appendChild(polygon);
+      }
+    }
+    generateBunting();
+
+    // ===== TABS =====
+    function switchTab(tabId, btn) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + tabId).classList.add('active');
+    }
+
+    // ===== TEXT UPDATE =====
+    function updateCard(elementId, value) {
+      document.getElementById(elementId).textContent = value;
+    }
+
+    // ===== PHOTO UPLOAD =====
+    function handlePhotoUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        showToast('Por favor selecciona una imagen válida');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const dataUrl = e.target.result;
+        document.getElementById('cardPhoto').src = dataUrl;
+        document.getElementById('editorPhotoPreview').src = dataUrl;
+        showToast('Foto actualizada correctamente');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // ===== DOWNLOAD =====
+    function downloadCard() {
+      showToast('Generando imagen...');
+      const card = document.getElementById('cardToExport');
+      html2canvas(card, {
+        useCORS: true,
+        allowTaint: true,
+        scale: 2,
+        backgroundColor: null,
+        logging: false,
+      }).then(function(canvas) {
+        const link = document.createElement('a');
+        link.download = 'tarjeta-cumpleanos.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        showToast('Tarjeta descargada exitosamente');
+      }).catch(function() {
+        showToast('Error al generar la imagen');
+      });
+    }
+
+    // ===== TOAST =====
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(function() {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
